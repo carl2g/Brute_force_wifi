@@ -1,0 +1,20 @@
+# #!/bin/ruby
+
+# require 'benchmark'
+
+# len = ARGV[0].to_i
+
+# `gcc -lm debruij.c -o debruij`
+# Benchmark.bm do |x|
+# 	puts '############### alpha: "01" len: 10 ###############'
+# 	x.report { `./debruij "01" 10` }
+# 	x.report { `ruby debruij.rb "01" 10` }
+# 	puts
+# 	puts '############### alpha: "abcdefg" len: 5 ###############'
+# 	x.report { `./debruij "abcdefg" 5` }
+# 	x.report { `ruby debruij.rb "abcdefg" 5` }
+# 	puts
+# 	puts '############### alpha: "abcdef" len: 10 ###############'
+# 	x.report { `./debruij "abcdefg" 10` }
+# 	x.report { `ruby debruij.rb "abcdefg" 10` }
+# end
